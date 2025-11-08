@@ -1,0 +1,69 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "node",
+    "runtime",
+    "pallets/identity-registry",
+    "pallets/consent-manager",
+    "pallets/authentication",
+]
+
+[workspace.package]
+authors = ["Patient X Team"]
+edition = "2021"
+repository = "https://github.com/patient-x/identity-consent-chain"
+license = "Apache-2.0"
+
+[workspace.dependencies]
+# Substrate
+parity-scale-codec = { version = "3.6.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+frame-executive = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+sp-api = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+sp-block-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+sp-inherents = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+sp-offchain = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+sp-session = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+sp-transaction-pool = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+sp-version = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+
+# Substrate pallets
+pallet-aura = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+pallet-timestamp = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+pallet-transaction-payment = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+pallet-sudo = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+
+# Cumulus
+cumulus-pallet-aura-ext = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+cumulus-pallet-parachain-system = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+cumulus-pallet-xcm = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+cumulus-primitives-core = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+cumulus-primitives-utility = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+parachain-info = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+
+# XCM
+xcm = { package = "staging-xcm", git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+xcm-builder = { package = "staging-xcm-builder", git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+xcm-executor = { package = "staging-xcm-executor", git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+pallet-xcm = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+
+# Local pallets
+pallet-identity-registry = { path = "pallets/identity-registry", default-features = false }
+pallet-consent-manager = { path = "pallets/consent-manager", default-features = false }
+pallet-authentication = { path = "pallets/authentication", default-features = false }
+
+# Build dependencies
+substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409" }
+substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409" }
+
+[profile.release]
+panic = "unwind"

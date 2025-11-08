@@ -1,0 +1,38 @@
+[package]
+name = "pallet-authentication"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+codec = { package = "parity-scale-codec", workspace = true }
+scale-info = { workspace = true }
+
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+sp-std = { workspace = true }
+sp-core = { workspace = true }
+sp-io = { workspace = true }
+sp-runtime = { workspace = true }
+
+pallet-identity-registry = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "frame-support/std",
+    "frame-system/std",
+    "sp-std/std",
+    "sp-core/std",
+    "sp-io/std",
+    "sp-runtime/std",
+    "pallet-identity-registry/std",
+]
+try-runtime = ["frame-support/try-runtime"]
