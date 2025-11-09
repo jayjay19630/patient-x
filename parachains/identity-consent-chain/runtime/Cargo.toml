@@ -6,10 +6,11 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-codec = { package = "parity-scale-codec", workspace = true }
+codec = { workspace = true }
 scale-info = { workspace = true }
 
 # Substrate
+frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false, optional = true }
 frame-executive = { workspace = true }
 frame-support = { workspace = true }
 frame-system = { workspace = true }
@@ -38,7 +39,6 @@ cumulus-pallet-xcm = { workspace = true }
 cumulus-primitives-core = { workspace = true }
 cumulus-primitives-utility = { workspace = true }
 parachain-info = { workspace = true }
-cumulus-prim itive-storage-weight-reclaim = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
 
 # XCM
 pallet-xcm = { workspace = true }
@@ -93,6 +93,21 @@ std = [
     "pallet-consent-manager/std",
     "pallet-authentication/std",
     "substrate-wasm-builder",
+]
+
+runtime-benchmarks = [
+    "frame-benchmarking/runtime-benchmarks",
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+    "pallet-balances/runtime-benchmarks",
+    "pallet-sudo/runtime-benchmarks",
+    "pallet-timestamp/runtime-benchmarks",
+    "pallet-xcm/runtime-benchmarks",
+    "sp-runtime/runtime-benchmarks",
+    "xcm-builder/runtime-benchmarks",
+    "xcm-executor/runtime-benchmarks",
+    "cumulus-pallet-parachain-system/runtime-benchmarks",
+    "cumulus-pallet-xcm/runtime-benchmarks",
 ]
 
 try-runtime = [

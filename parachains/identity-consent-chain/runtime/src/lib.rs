@@ -52,6 +52,26 @@ pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
 pub use sp_runtime::{MultiAddress, Perbill, Permill};
 
+// Export types needed by node
+pub use sp_consensus_aura::sr25519::AuthorityId as AuraId;
+
+// Export for easy access
+pub type Nonce = Index;
+
+// Re-export WASM binary
+#[cfg(feature = "std")]
+include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
+
+/// Wasm binary unwrapped. If built with `BUILD_DUMMY_WASM_BINARY`, the function panics.
+#[cfg(feature = "std")]
+pub fn wasm_binary_unwrap() -> &'static [u8] {
+    WASM_BINARY.expect(
+        "Development wasm binary is not available. This means the client is built with \
+         `BUILD_DUMMY_WASM_BINARY` flag and it is only usable for production chains. \
+         Please rebuild with the flag disabled.",
+    )
+}
+
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 pub type Signature = MultiSignature;
 
@@ -203,6 +223,9 @@ parameter_types! {
     pub const MaxLocks: u32 = 50;
     pub const MaxReserves: u32 = 50;
 }
+
+/// The existential deposit exported for easy access
+pub const EXISTENTIAL_DEPOSIT: Balance = 500;
 
 impl pallet_balances::Config for Runtime {
     type MaxLocks = MaxLocks;
@@ -411,6 +434,9 @@ construct_runtime!(
         Authentication: pallet_authentication = 52,
     }
 );
+
+/// The type used to represent the kinds of proxying allowed.
+pub type RuntimeGenesisConfig = frame_support::genesis_config_prelude::RuntimeGenesisConfig;
 
 // Runtime APIs implementation
 impl_runtime_apis! {
