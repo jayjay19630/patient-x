@@ -28,6 +28,7 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use sp_std::prelude::*;
     use sp_core::H256;
+    use sp_runtime::traits::UniqueSaturatedInto;
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -192,7 +193,7 @@ pub mod pallet {
             // Validate name
             ensure!(!name.is_empty(), Error::<T>::InvalidName);
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             let identity = Identity {
                 did: did.clone(),
@@ -243,7 +244,7 @@ pub mod pallet {
                     identity.email_hash = new_email_hash;
                 }
 
-                identity.updated_at = T::TimeProvider::now();
+                identity.updated_at = T::TimeProvider::now().unique_saturated_into();
 
                 Self::deposit_event(Event::IdentityUpdated { account: who.clone() });
 
@@ -264,7 +265,7 @@ pub mod pallet {
                 Error::<T>::VerificationAlreadyPending
             );
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
             VerificationQueue::<T>::insert(&who, now);
 
             Identities::<T>::try_mutate(&who, |maybe_identity| -> DispatchResult {
@@ -298,7 +299,7 @@ pub mod pallet {
             Identities::<T>::try_mutate(&target, |maybe_identity| -> DispatchResult {
                 let identity = maybe_identity.as_mut().ok_or(Error::<T>::IdentityNotFound)?;
                 identity.verification_status = VerificationStatus::Verified;
-                identity.updated_at = T::TimeProvider::now();
+                identity.updated_at = T::TimeProvider::now().unique_saturated_into();
                 Ok(())
             })?;
 
@@ -333,7 +334,7 @@ pub mod pallet {
             Identities::<T>::try_mutate(&target, |maybe_identity| -> DispatchResult {
                 let identity = maybe_identity.as_mut().ok_or(Error::<T>::IdentityNotFound)?;
                 identity.verification_status = VerificationStatus::Rejected;
-                identity.updated_at = T::TimeProvider::now();
+                identity.updated_at = T::TimeProvider::now().unique_saturated_into();
                 Ok(())
             })?;
 
@@ -356,7 +357,7 @@ pub mod pallet {
             Identities::<T>::try_mutate(&who, |maybe_identity| -> DispatchResult {
                 let identity = maybe_identity.as_mut().ok_or(Error::<T>::IdentityNotFound)?;
                 identity.active = false;
-                identity.updated_at = T::TimeProvider::now();
+                identity.updated_at = T::TimeProvider::now().unique_saturated_into();
                 Ok(())
             })?;
 

@@ -29,6 +29,7 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use sp_std::prelude::*;
     use sp_core::H256;
+    use sp_runtime::traits::UniqueSaturatedInto;
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -209,7 +210,7 @@ pub mod pallet {
         ) -> DispatchResult {
             let user = ensure_signed(origin)?;
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             // Generate event ID
             let count = EventCount::<T>::get();
@@ -249,7 +250,7 @@ pub mod pallet {
         ) -> DispatchResult {
             let _who = ensure_signed(origin)?;
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             // Update daily stats
             Self::update_daily_stats(now, 1, amount);

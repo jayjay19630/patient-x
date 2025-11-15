@@ -28,6 +28,7 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use sp_std::prelude::*;
     use sp_core::H256;
+    use sp_runtime::traits::UniqueSaturatedInto;
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -186,7 +187,7 @@ pub mod pallet {
 
             ensure!(!ipfs_hash.is_empty(), Error::<T>::InvalidIPFSHash);
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             // Check if content already exists
             if let Some(mut content) = IPFSContents::<T>::get(&ipfs_hash) {
@@ -249,7 +250,7 @@ pub mod pallet {
                     Error::<T>::AlreadyUnpinned
                 );
 
-                let now = T::TimeProvider::now();
+                let now: u64 = T::TimeProvider::now().unique_saturated_into();
                 content.status = ContentStatus::Unpinned;
                 content.unpinned_at = Some(now);
 

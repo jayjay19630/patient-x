@@ -29,6 +29,7 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use sp_std::prelude::*;
     use sp_core::H256;
+    use sp_runtime::traits::UniqueSaturatedInto;
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -233,7 +234,7 @@ pub mod pallet {
             ensure!(!ipfs_hash.is_empty(), Error::<T>::InvalidIPFSHash);
             ensure!(!title.is_empty(), Error::<T>::InvalidTitle);
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             // Generate unique record ID
             let count = RecordCount::<T>::get();
@@ -336,7 +337,7 @@ pub mod pallet {
 
                 ensure!(record.active, Error::<T>::RecordDeactivated);
 
-                let now = T::TimeProvider::now();
+                let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
                 // Update access stats
                 record.access_count = record.access_count.saturating_add(1);

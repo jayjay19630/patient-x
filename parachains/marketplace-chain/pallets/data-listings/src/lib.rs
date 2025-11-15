@@ -28,6 +28,7 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use sp_std::prelude::*;
     use sp_core::H256;
+    use sp_runtime::traits::UniqueSaturatedInto;
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -219,7 +220,7 @@ pub mod pallet {
         ) -> DispatchResult {
             let provider = ensure_signed(origin)?;
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             // Validate pricing
             ensure!(Self::is_valid_pricing(&pricing), Error::<T>::InvalidPricing);
@@ -291,7 +292,7 @@ pub mod pallet {
 
                 ensure!(listing.provider == who, Error::<T>::NotAuthorized);
 
-                let now = T::TimeProvider::now();
+                let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
                 if let Some(new_title) = title {
                     listing.title = new_title;
@@ -333,7 +334,7 @@ pub mod pallet {
                 ensure!(listing.provider == who, Error::<T>::NotAuthorized);
 
                 listing.status = status.clone();
-                listing.updated_at = T::TimeProvider::now();
+                listing.updated_at = T::TimeProvider::now().unique_saturated_into();
 
                 Self::deposit_event(Event::ListingStatusChanged { listing_id, status });
 
@@ -357,7 +358,7 @@ pub mod pallet {
                 let listing = maybe_listing.as_mut().ok_or(Error::<T>::ListingNotFound)?;
 
                 listing.quality_score = score;
-                listing.updated_at = T::TimeProvider::now();
+                listing.updated_at = T::TimeProvider::now().unique_saturated_into();
 
                 Self::deposit_event(Event::ListingUpdated { listing_id });
 

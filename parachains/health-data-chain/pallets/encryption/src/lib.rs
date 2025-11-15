@@ -28,6 +28,7 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use sp_std::prelude::*;
     use sp_core::H256;
+    use sp_runtime::traits::UniqueSaturatedInto;
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -207,7 +208,7 @@ pub mod pallet {
         ) -> DispatchResult {
             let owner = ensure_signed(origin)?;
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             // Check if account has reached max keys
             let mut account_keys = AccountKeys::<T>::get(&owner);
@@ -271,7 +272,7 @@ pub mod pallet {
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             // Get old key for record
             let old_key_id = RecordKeys::<T>::get(&record_id).ok_or(Error::<T>::NoKeyForRecord)?;
@@ -364,7 +365,7 @@ pub mod pallet {
             let key = EncryptionKeys::<T>::get(key_id).ok_or(Error::<T>::KeyNotFound)?;
             ensure!(key.owner == who, Error::<T>::NotAuthorized);
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             let access = KeyAccess {
                 grantee: grantee.clone(),

@@ -29,6 +29,7 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use sp_std::prelude::*;
     use sp_core::H256;
+    use sp_runtime::traits::UniqueSaturatedInto;
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -233,7 +234,7 @@ pub mod pallet {
                 Error::<T>::MaxReviewsReached
             );
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             // Generate review ID
             let count = ReviewCount::<T>::get();
@@ -327,9 +328,9 @@ pub mod pallet {
             ProviderReputations::<T>::try_mutate(&provider, |maybe_reputation| -> DispatchResult {
                 if let Some(reputation) = maybe_reputation {
                     reputation.quality_score = score;
-                    reputation.updated_at = T::TimeProvider::now();
+                    reputation.updated_at = T::TimeProvider::now().unique_saturated_into();
                 } else {
-                    let now = T::TimeProvider::now();
+                    let now: u64 = T::TimeProvider::now().unique_saturated_into();
                     *maybe_reputation = Some(ProviderReputation {
                         provider: provider.clone(),
                         total_reviews: 0,
@@ -355,9 +356,9 @@ pub mod pallet {
             ProviderReputations::<T>::try_mutate(&provider, |maybe_reputation| -> DispatchResult {
                 if let Some(reputation) = maybe_reputation {
                     reputation.verified = true;
-                    reputation.updated_at = T::TimeProvider::now();
+                    reputation.updated_at = T::TimeProvider::now().unique_saturated_into();
                 } else {
-                    let now = T::TimeProvider::now();
+                    let now: u64 = T::TimeProvider::now().unique_saturated_into();
                     *maybe_reputation = Some(ProviderReputation {
                         provider: provider.clone(),
                         total_reviews: 0,
@@ -409,7 +410,7 @@ pub mod pallet {
 
         /// Update provider reputation with new rating
         fn update_provider_reputation(provider: &T::AccountId, new_rating: RatingValue) {
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             ProviderReputations::<T>::mutate(provider, |maybe_reputation| {
                 if let Some(reputation) = maybe_reputation {

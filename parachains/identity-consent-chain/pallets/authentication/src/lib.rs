@@ -17,7 +17,7 @@ pub mod pallet {
     use frame_support::{pallet_prelude::*, traits::Time};
     use frame_system::pallet_prelude::*;
     use sp_std::prelude::*;
-    use sp_core::H256;
+    use sp_runtime::traits::UniqueSaturatedInto;
     use pallet_identity_registry::Pallet as IdentityRegistry;
 
     #[pallet::pallet]
@@ -28,7 +28,7 @@ pub mod pallet {
     #[scale_info(skip_type_params(T))]
     pub struct Session<T: Config> {
         pub account: T::AccountId,
-        pub session_id: H256,
+        pub session_id: T::Hash,
         pub created_at: u64,
         pub expires_at: u64,
         pub active: bool,
@@ -39,7 +39,7 @@ pub mod pallet {
     #[scale_info(skip_type_params(T))]
     pub struct ApiKey<T: Config> {
         pub account: T::AccountId,
-        pub key_hash: H256,
+        pub key_hash: T::Hash,
         pub name: BoundedVec<u8, ConstU32<32>>,
         pub created_at: u64,
         pub last_used: Option<u64>,
@@ -49,6 +49,8 @@ pub mod pallet {
     #[pallet::config]
     pub trait Config: frame_system::Config + pallet_identity_registry::Config {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
+        /// Time provider for timestamps
         type TimeProvider: Time;
 
         #[pallet::constant]
@@ -56,27 +58,27 @@ pub mod pallet {
     }
 
     #[pallet::storage]
-    pub type Sessions<T: Config> = StorageMap<_, Blake2_128Concat, H256, Session<T>>;
+    pub type Sessions<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, Session<T>>;
 
     #[pallet::storage]
-    pub type ApiKeys<T: Config> = StorageMap<_, Blake2_128Concat, H256, ApiKey<T>>;
+    pub type ApiKeys<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, ApiKey<T>>;
 
     #[pallet::storage]
     pub type AccountSessions<T: Config> = StorageMap<
         _,
         Blake2_128Concat,
         T::AccountId,
-        BoundedVec<H256, ConstU32<10>>,
+        BoundedVec<T::Hash, ConstU32<10>>,
         ValueQuery,
     >;
 
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
-        SessionCreated { account: T::AccountId, session_id: H256 },
-        SessionRevoked { session_id: H256 },
-        ApiKeyCreated { account: T::AccountId, key_hash: H256 },
-        ApiKeyRevoked { key_hash: H256 },
+        SessionCreated { account: T::AccountId, session_id: T::Hash },
+        SessionRevoked { session_id: T::Hash },
+        ApiKeyCreated { account: T::AccountId, key_hash: T::Hash },
+        ApiKeyRevoked { key_hash: T::Hash },
     }
 
     #[pallet::error]
@@ -102,7 +104,7 @@ pub mod pallet {
                 Error::<T>::InvalidIdentity
             );
 
-            let now = T::TimeProvider::now();
+            let now: u64 = <T as Config>::TimeProvider::now().unique_saturated_into();
             let session_id = Self::generate_session_id(&who, now);
 
             let session = Session {
@@ -127,7 +129,7 @@ pub mod pallet {
 
         #[pallet::call_index(1)]
         #[pallet::weight(10_000)]
-        pub fn revoke_session(origin: OriginFor<T>, session_id: H256) -> DispatchResult {
+        pub fn revoke_session(origin: OriginFor<T>, session_id: T::Hash) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
             Sessions::<T>::try_mutate(session_id, |maybe_session| -> DispatchResult {
@@ -146,7 +148,7 @@ pub mod pallet {
         #[pallet::weight(10_000)]
         pub fn create_api_key(
             origin: OriginFor<T>,
-            key_hash: H256,
+            key_hash: T::Hash,
             name: BoundedVec<u8, ConstU32<32>>,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
@@ -156,7 +158,7 @@ pub mod pallet {
                 Error::<T>::InvalidIdentity
             );
 
-            let now = T::TimeProvider::now();
+            let now: u64 = <T as Config>::TimeProvider::now().unique_saturated_into();
 
             let api_key = ApiKey {
                 account: who.clone(),
@@ -176,7 +178,7 @@ pub mod pallet {
 
         #[pallet::call_index(3)]
         #[pallet::weight(10_000)]
-        pub fn revoke_api_key(origin: OriginFor<T>, key_hash: H256) -> DispatchResult {
+        pub fn revoke_api_key(origin: OriginFor<T>, key_hash: T::Hash) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
             ApiKeys::<T>::try_mutate(key_hash, |maybe_key| -> DispatchResult {
@@ -193,14 +195,14 @@ pub mod pallet {
     }
 
     impl<T: Config> Pallet<T> {
-        fn generate_session_id(account: &T::AccountId, timestamp: u64) -> H256 {
+        fn generate_session_id(account: &T::AccountId, timestamp: u64) -> T::Hash {
             use sp_runtime::traits::Hash;
             let mut data = account.encode();
             data.extend_from_slice(&timestamp.encode());
             T::Hashing::hash(&data)
         }
 
-        pub fn is_session_valid(session_id: &H256, now: u64) -> bool {
+        pub fn is_session_valid(session_id: &T::Hash, now: u64) -> bool {
             if let Some(session) = Sessions::<T>::get(session_id) {
                 session.active && session.expires_at > now
             } else {

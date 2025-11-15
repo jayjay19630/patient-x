@@ -29,6 +29,7 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use sp_std::prelude::*;
     use sp_core::H256;
+    use sp_runtime::traits::UniqueSaturatedInto;
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -242,7 +243,7 @@ pub mod pallet {
 
             ensure!(amount > 0, Error::<T>::InvalidAmount);
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             // Calculate platform fee
             let platform_fee = Self::calculate_platform_fee(amount);
@@ -304,7 +305,7 @@ pub mod pallet {
                 ensure!(purchase.provider == who, Error::<T>::NotAuthorized);
                 ensure!(purchase.status == PurchaseStatus::Paid, Error::<T>::NotPaid);
 
-                let now = T::TimeProvider::now();
+                let now: u64 = T::TimeProvider::now().unique_saturated_into();
                 purchase.status = PurchaseStatus::Fulfilled;
                 purchase.fulfilled_at = Some(now);
 
@@ -377,7 +378,7 @@ pub mod pallet {
             ensure!(amount > 0, Error::<T>::InvalidAmount);
             ensure!(period_days > 0, Error::<T>::InvalidAmount);
 
-            let now = T::TimeProvider::now();
+            let now: u64 = T::TimeProvider::now().unique_saturated_into();
 
             // Generate subscription ID
             let count = SubscriptionCount::<T>::get();

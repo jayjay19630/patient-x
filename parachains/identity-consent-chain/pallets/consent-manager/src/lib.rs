@@ -27,7 +27,7 @@ pub mod pallet {
     use frame_support::{pallet_prelude::*, traits::Time};
     use frame_system::pallet_prelude::*;
     use sp_std::prelude::*;
-    use sp_core::H256;
+    use sp_runtime::traits::UniqueSaturatedInto;
     use pallet_identity_registry::{UserRole, Pallet as IdentityRegistry};
 
     #[pallet::pallet]
@@ -91,7 +91,7 @@ pub mod pallet {
     #[scale_info(skip_type_params(T))]
     pub struct Consent<T: Config> {
         /// Unique consent ID
-        pub consent_id: H256,
+        pub consent_id: T::Hash,
         /// Data owner (patient)
         pub data_owner: T::AccountId,
         /// Data consumer (researcher/institution)
@@ -113,7 +113,7 @@ pub mod pallet {
         /// Last accessed timestamp
         pub last_accessed: Option<u64>,
         /// Additional constraints (hash of terms)
-        pub terms_hash: H256,
+        pub terms_hash: T::Hash,
     }
 
     /// Consent access log entry
@@ -121,13 +121,13 @@ pub mod pallet {
     #[scale_info(skip_type_params(T))]
     pub struct AccessLog<T: Config> {
         /// Consent ID
-        pub consent_id: H256,
+        pub consent_id: T::Hash,
         /// Accessor account
         pub accessor: T::AccountId,
         /// Access timestamp
         pub accessed_at: u64,
         /// Data accessed (hash)
-        pub data_hash: H256,
+        pub data_hash: T::Hash,
         /// Access approved
         pub approved: bool,
     }
@@ -152,7 +152,7 @@ pub mod pallet {
     /// Storage for consents by consent_id
     #[pallet::storage]
     #[pallet::getter(fn consents)]
-    pub type Consents<T: Config> = StorageMap<_, Blake2_128Concat, H256, Consent<T>>;
+    pub type Consents<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, Consent<T>>;
 
     /// Storage for consent IDs by data owner
     #[pallet::storage]
@@ -161,7 +161,7 @@ pub mod pallet {
         _,
         Blake2_128Concat,
         T::AccountId,
-        BoundedVec<H256, ConstU32<1000>>,
+        BoundedVec<T::Hash, ConstU32<1000>>,
         ValueQuery,
     >;
 
@@ -172,7 +172,7 @@ pub mod pallet {
         _,
         Blake2_128Concat,
         T::AccountId,
-        BoundedVec<H256, ConstU32<1000>>,
+        BoundedVec<T::Hash, ConstU32<1000>>,
         ValueQuery,
     >;
 
@@ -182,7 +182,7 @@ pub mod pallet {
     pub type AccessLogs<T: Config> = StorageMap<
         _,
         Blake2_128Concat,
-        H256,
+        T::Hash,
         BoundedVec<AccessLog<T>, ConstU32<1000>>,
         ValueQuery,
     >;
@@ -197,28 +197,28 @@ pub mod pallet {
     pub enum Event<T: Config> {
         /// Consent created [consent_id, owner, consumer, purpose]
         ConsentCreated {
-            consent_id: H256,
+            consent_id: T::Hash,
             owner: T::AccountId,
             consumer: T::AccountId,
             purpose: DataPurpose,
         },
         /// Consent updated [consent_id]
-        ConsentUpdated { consent_id: H256 },
+        ConsentUpdated { consent_id: T::Hash },
         /// Consent revoked [consent_id, revoker]
         ConsentRevoked {
-            consent_id: H256,
+            consent_id: T::Hash,
             revoker: T::AccountId,
         },
         /// Consent expired [consent_id]
-        ConsentExpired { consent_id: H256 },
+        ConsentExpired { consent_id: T::Hash },
         /// Consent accessed [consent_id, accessor]
         ConsentAccessed {
-            consent_id: H256,
+            consent_id: T::Hash,
             accessor: T::AccountId,
         },
         /// Access denied [consent_id, accessor, reason]
         AccessDenied {
-            consent_id: H256,
+            consent_id: T::Hash,
             accessor: T::AccountId,
             reason: BoundedVec<u8, ConstU32<64>>,
         },
@@ -267,7 +267,7 @@ pub mod pallet {
             purpose: DataPurpose,
             data_types: BoundedVec<DataType, ConstU32<10>>,
             expires_at: u64,
-            terms_hash: H256,
+            terms_hash: T::Hash,
         ) -> DispatchResult {
             let owner = ensure_signed(origin)?;
 
@@ -285,7 +285,7 @@ pub mod pallet {
             // Validate data types
             ensure!(!data_types.is_empty(), Error::<T>::InvalidDataTypes);
 
-            let now = T::TimeProvider::now();
+            let now: u64 = <T as Config>::TimeProvider::now().unique_saturated_into();
 
             // Validate expiry
             if expires_at > 0 {
@@ -339,7 +339,7 @@ pub mod pallet {
         /// Revoke an existing consent
         #[pallet::call_index(1)]
         #[pallet::weight(10_000)]
-        pub fn revoke_consent(origin: OriginFor<T>, consent_id: H256) -> DispatchResult {
+        pub fn revoke_consent(origin: OriginFor<T>, consent_id: T::Hash) -> DispatchResult {
             let revoker = ensure_signed(origin)?;
 
             Consents::<T>::try_mutate(consent_id, |maybe_consent| -> DispatchResult {
@@ -354,7 +354,7 @@ pub mod pallet {
                     Error::<T>::AlreadyRevoked
                 );
 
-                let now = T::TimeProvider::now();
+                let now: u64 = <T as Config>::TimeProvider::now().unique_saturated_into();
                 consent.status = ConsentStatus::Revoked;
                 consent.revoked_at = Some(now);
 
@@ -369,7 +369,7 @@ pub mod pallet {
         #[pallet::weight(10_000)]
         pub fn update_consent(
             origin: OriginFor<T>,
-            consent_id: H256,
+            consent_id: T::Hash,
             new_expires_at: Option<u64>,
             new_data_types: Option<BoundedVec<DataType, ConstU32<10>>>,
         ) -> DispatchResult {
@@ -387,7 +387,7 @@ pub mod pallet {
                     Error::<T>::ConsentExpired
                 );
 
-                let now = T::TimeProvider::now();
+                let now: u64 = <T as Config>::TimeProvider::now().unique_saturated_into();
 
                 if let Some(expires_at) = new_expires_at {
                     if expires_at > 0 {
@@ -412,8 +412,8 @@ pub mod pallet {
         #[pallet::weight(10_000)]
         pub fn log_access(
             origin: OriginFor<T>,
-            consent_id: H256,
-            data_hash: H256,
+            consent_id: T::Hash,
+            data_hash: T::Hash,
         ) -> DispatchResult {
             let accessor = ensure_signed(origin)?;
 
@@ -421,7 +421,7 @@ pub mod pallet {
                 let consent = maybe_consent.as_mut().ok_or(Error::<T>::ConsentNotFound)?;
 
                 // Check consent is active and valid
-                let now = T::TimeProvider::now();
+                let now: u64 = <T as Config>::TimeProvider::now().unique_saturated_into();
 
                 if !matches!(consent.status, ConsentStatus::Active) {
                     Self::deposit_event(Event::AccessDenied {
@@ -468,7 +468,7 @@ pub mod pallet {
         #[pallet::weight(5_000)]
         pub fn check_consent(
             origin: OriginFor<T>,
-            consent_id: H256,
+            consent_id: T::Hash,
             accessor: T::AccountId,
         ) -> DispatchResult {
             ensure_signed(origin)?;
@@ -481,7 +481,7 @@ pub mod pallet {
             }
 
             // Check expiry
-            let now = T::TimeProvider::now();
+            let now: u64 = <T as Config>::TimeProvider::now().unique_saturated_into();
             if consent.expires_at > 0 && consent.expires_at < now {
                 return Err(Error::<T>::ConsentExpired.into());
             }
@@ -496,7 +496,7 @@ pub mod pallet {
     // Helper functions
     impl<T: Config> Pallet<T> {
         /// Generate unique consent ID
-        fn generate_consent_id(owner: &T::AccountId, consumer: &T::AccountId, nonce: u64) -> H256 {
+        fn generate_consent_id(owner: &T::AccountId, consumer: &T::AccountId, nonce: u64) -> T::Hash {
             use sp_runtime::traits::Hash;
             let mut data = owner.encode();
             data.extend_from_slice(&consumer.encode());
@@ -525,7 +525,7 @@ pub mod pallet {
         }
 
         /// Check if consent is valid (public helper)
-        pub fn is_consent_valid(consent_id: &H256, accessor: &T::AccountId, now: u64) -> bool {
+        pub fn is_consent_valid(consent_id: &T::Hash, accessor: &T::AccountId, now: u64) -> bool {
             if let Some(consent) = Consents::<T>::get(consent_id) {
                 matches!(consent.status, ConsentStatus::Active)
                     && (consent.expires_at == 0 || consent.expires_at > now)
