@@ -233,7 +233,7 @@ pub mod pallet {
                 Error::<T>::MaxReviewsReached
             );
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now();
 
             // Generate review ID
             let count = ReviewCount::<T>::get();
@@ -327,9 +327,9 @@ pub mod pallet {
             ProviderReputations::<T>::try_mutate(&provider, |maybe_reputation| -> DispatchResult {
                 if let Some(reputation) = maybe_reputation {
                     reputation.quality_score = score;
-                    reputation.updated_at = T::TimeProvider::now().as_secs();
+                    reputation.updated_at = T::TimeProvider::now();
                 } else {
-                    let now = T::TimeProvider::now().as_secs();
+                    let now = T::TimeProvider::now();
                     *maybe_reputation = Some(ProviderReputation {
                         provider: provider.clone(),
                         total_reviews: 0,
@@ -355,9 +355,9 @@ pub mod pallet {
             ProviderReputations::<T>::try_mutate(&provider, |maybe_reputation| -> DispatchResult {
                 if let Some(reputation) = maybe_reputation {
                     reputation.verified = true;
-                    reputation.updated_at = T::TimeProvider::now().as_secs();
+                    reputation.updated_at = T::TimeProvider::now();
                 } else {
-                    let now = T::TimeProvider::now().as_secs();
+                    let now = T::TimeProvider::now();
                     *maybe_reputation = Some(ProviderReputation {
                         provider: provider.clone(),
                         total_reviews: 0,
@@ -409,7 +409,7 @@ pub mod pallet {
 
         /// Update provider reputation with new rating
         fn update_provider_reputation(provider: &T::AccountId, new_rating: RatingValue) {
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now();
 
             ProviderReputations::<T>::mutate(provider, |maybe_reputation| {
                 if let Some(reputation) = maybe_reputation {

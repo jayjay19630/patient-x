@@ -107,11 +107,10 @@ Patient X is a decentralized medical data marketplace built on three interconnec
 ```
 parachains/
 ├── README.md                          # This file
-├── 
 ├── scripts/
+│   ├── run.sh                        # One-command setup & launch
 │   ├── build-all.sh                  # Build all parachains
 │   └── clean-all.sh                  # Clean build artifacts
-│   └── run.sh                        # One-command setup & launch
 ├── identity-consent-chain/
 │   ├── Cargo.toml
 │   ├── node/                         # Node implementation
@@ -146,8 +145,8 @@ parachains/
 
 ```bash
 cd parachains
-chmod +x run.sh
-./run.sh
+chmod +x scripts/run.sh
+./scripts/run.sh
 ```
 
 This single command will:

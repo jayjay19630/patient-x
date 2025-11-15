@@ -68,8 +68,22 @@ else
     echo -e "${GREEN}✓ Binaries already built${NC}"
 fi
 
-# Step 4: Download zombienet if needed
-echo -e "${YELLOW}[4/4] Setting up zombienet...${NC}"
+# Step 4: Install Polkadot binary
+echo -e "${YELLOW}[4/5] Installing Polkadot...${NC}"
+
+if ! command_exists polkadot; then
+    echo "Polkadot not found. Installing (this takes 15-30 minutes)..."
+    cargo install --git https://github.com/paritytech/polkadot-sdk.git --tag polkadot-stable2409 polkadot || {
+        echo -e "${RED}Warning: Polkadot installation failed${NC}"
+        echo "You can install it manually later with:"
+        echo "  cargo install --git https://github.com/paritytech/polkadot-sdk.git --tag polkadot-stable2409 polkadot"
+    }
+else
+    echo -e "${GREEN}✓ Polkadot already installed ($(polkadot --version | head -1))${NC}"
+fi
+
+# Step 5: Download zombienet if needed
+echo -e "${YELLOW}[5/5] Setting up zombienet...${NC}"
 
 if [ ! -f "./zombienet" ]; then
     echo "Downloading zombienet..."
@@ -125,13 +139,11 @@ chain = "rococo-local"
   name = "alice"
   validator = true
   rpc_port = 9944
-  ws_port = 9944
 
   [[relaychain.nodes]]
   name = "bob"
   validator = true
   rpc_port = 9945
-  ws_port = 9945
 
 [[parachains]]
 id = 2000
@@ -142,7 +154,6 @@ chain = "identity-consent-local"
   command = "./identity-consent-chain/target/release/identity-consent-node"
   args = ["-lparachain=debug"]
   rpc_port = 9988
-  ws_port = 9988
 
 [[parachains]]
 id = 2001
@@ -153,7 +164,6 @@ chain = "health-data-local"
   command = "./health-data-chain/target/release/health-data-node"
   args = ["-lparachain=debug"]
   rpc_port = 9989
-  ws_port = 9989
 
 [[parachains]]
 id = 2002
@@ -164,7 +174,6 @@ chain = "marketplace-local"
   command = "./marketplace-chain/target/release/marketplace-node"
   args = ["-lparachain=debug"]
   rpc_port = 9990
-  ws_port = 9990
 EOF
 fi
 

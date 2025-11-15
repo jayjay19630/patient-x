@@ -209,7 +209,7 @@ pub mod pallet {
         ) -> DispatchResult {
             let user = ensure_signed(origin)?;
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now();
 
             // Generate event ID
             let count = EventCount::<T>::get();
@@ -249,7 +249,7 @@ pub mod pallet {
         ) -> DispatchResult {
             let _who = ensure_signed(origin)?;
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now();
 
             // Update daily stats
             Self::update_daily_stats(now, 1, amount);
