@@ -107,12 +107,11 @@ Patient X is a decentralized medical data marketplace built on three interconnec
 ```
 parachains/
 ├── README.md                          # This file
-├── docker-compose.yml                 # Local testnet setup
+├── STATUS.md                          # Implementation status
+├── run.sh                             # One-command setup & launch
 ├── scripts/
-│   ├── setup.sh                      # Environment setup
 │   ├── build-all.sh                  # Build all parachains
-│   ├── launch-testnet.sh             # Launch local testnet
-│   └── register-parachains.sh        # Register parachains
+│   └── clean-all.sh                  # Clean build artifacts
 ├── identity-consent-chain/
 │   ├── Cargo.toml
 │   ├── node/                         # Node implementation
@@ -141,46 +140,141 @@ parachains/
         └── analytics/
 ```
 
-## Getting Started
+## Quick Start
 
-### Prerequisites
+### One-Command Setup (Easiest Way)
+
+```bash
+cd parachains
+chmod +x run.sh
+./run.sh
+```
+
+This single command will:
+1. Install Rust and all dependencies
+2. Build all three parachains (~30-40 min first time)
+3. Launch local testnet with relay chain and parachains
+
+### Manual Setup
+
+If you prefer step-by-step control:
+
+#### 1. Install Prerequisites
 
 ```bash
 # Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
 
 # Add WebAssembly target
 rustup target add wasm32-unknown-unknown
 
-# Install Polkadot SDK dependencies
-# On macOS
-brew install cmake pkg-config openssl git llvm
+# Install system dependencies
+# macOS:
+brew install cmake pkg-config openssl git llvm protobuf
 
-# On Ubuntu/Debian
-sudo apt install -y cmake pkg-config libssl-dev git clang libclang-dev protobuf-compiler
+# Ubuntu/Debian:
+sudo apt install -y cmake pkg-config libssl-dev git clang libclang-dev protobuf-compiler build-essential
 ```
 
-### Build All Chains
+#### 2. Build All Chains
 
 ```bash
 cd parachains
-chmod +x scripts/*.sh
+chmod +x scripts/build-all.sh
 ./scripts/build-all.sh
 ```
 
-### Launch Local Testnet
+Expected build time: 20-40 minutes (first build)
+
+#### 3. Launch Testnet
+
+The build script will output instructions, but you can manually launch with:
 
 ```bash
-# Start local relay chain and all three parachains
-./scripts/launch-testnet.sh
+# Download and run polkadot relay chain + zombienet
+# (Or just use run.sh which does everything)
 ```
 
-### Access Endpoints
+### Access the Chains
 
-- **Relay Chain**: ws://localhost:9944
-- **IdentityConsent Chain**: ws://localhost:9988
-- **HealthData Chain**: ws://localhost:9989
-- **Marketplace Chain**: ws://localhost:9990
+Once running, connect with [Polkadot.js Apps](https://polkadot.js.org/apps/):
+
+- **Relay Chain**: [ws://localhost:9944](https://polkadot.js.org/apps/?rpc=ws://127.0.0.1:9944)
+- **IdentityConsent Chain**: [ws://localhost:9988](https://polkadot.js.org/apps/?rpc=ws://127.0.0.1:9988)
+- **HealthData Chain**: [ws://localhost:9989](https://polkadot.js.org/apps/?rpc=ws://127.0.0.1:9989)
+- **Marketplace Chain**: [ws://localhost:9990](https://polkadot.js.org/apps/?rpc=ws://127.0.0.1:9990)
+
+## Usage Examples
+
+### 1. Register Identity (IdentityConsent Chain)
+
+Connect to ws://localhost:9988 in Polkadot.js Apps:
+
+```javascript
+// Developer → Extrinsics
+identityRegistry.registerIdentity(
+  did: "did:patientx:alice:123456",
+  role: "Patient",
+  name: "Alice Patient",
+  emailHash: "0x..." // keccak256 hash of email
+)
+```
+
+### 2. Create Consent
+
+```javascript
+consentManager.createConsent(
+  consumer: "5GrwvaEF...", // Researcher's account
+  purpose: "Research",
+  dataTypes: ["LabResults", "Genomic"],
+  expiresAt: 1735689600, // Unix timestamp
+  termsHash: "0x..." // Hash of consent terms
+)
+```
+
+### 3. Store Health Record (HealthData Chain)
+
+Connect to ws://localhost:9989:
+
+```javascript
+healthRecords.storeRecord(
+  ipfsHash: "QmX...", // IPFS CID
+  encryptionKeyHash: "0x...",
+  recordType: "LabResults",
+  metadata: "{...}"
+)
+```
+
+### 4. List Data (Marketplace Chain)
+
+Connect to ws://localhost:9990:
+
+```javascript
+dataListings.createListing(
+  dataHash: "0x...",
+  price: 1000000000000,
+  consentId: "0x...",
+  description: "Lab results dataset"
+)
+```
+
+## Architecture Diagram
+
+```
+┌──────────────────────────────────────────────────┐
+│         Polkadot Relay Chain (Local)             │
+│         Alice (9944) & Bob (9945)                │
+└────────┬──────────────┬─────────────┬────────────┘
+         │              │             │
+    ┌────▼────┐    ┌────▼────┐   ┌───▼─────┐
+    │Identity │    │ Health  │   │Marketplace│
+    │Consent  │◄──►│  Data   │◄─►│  Chain   │
+    │(2000)   │    │ (2001)  │   │  (2002)  │
+    │:9988    │    │ :9989   │   │  :9990   │
+    └─────────┘    └─────────┘   └──────────┘
+         XCM Messages Flow Between All Chains
+```
 
 ## Development
 
@@ -211,16 +305,50 @@ cd identity-consent-chain
 cargo test
 ```
 
-## Deployment
+### Clean Build Artifacts
 
-### Testnet Deployment (Rococo)
+```bash
+./scripts/clean-all.sh
+```
 
-1. Build parachain artifacts
-2. Generate chain spec
-3. Register parachain on Rococo
-4. Start collators
+## Troubleshooting
 
-See [docs/deployment.md](./docs/deployment.md) for detailed instructions.
+### Build Issues
+
+**Problem**: Build fails with linker errors
+```bash
+# macOS
+brew install llvm
+
+# Linux
+sudo apt install build-essential clang
+```
+
+**Problem**: "WASM binary not available"
+```bash
+cargo clean
+cargo build --release
+```
+
+### Runtime Issues
+
+**Problem**: Ports already in use
+```bash
+# Kill processes on ports
+lsof -ti:9944,9988,9989,9990 | xargs kill -9
+```
+
+**Problem**: Parachain won't connect
+- Ensure relay chain is producing blocks first
+- Check that para IDs match in config
+- Verify collator is running
+
+### Development Tips
+
+1. **Fast iterations**: Use `cargo check` instead of `cargo build` for syntax checking
+2. **Watch mode**: Use `cargo watch -x check` for auto-compilation
+3. **Parallel builds**: Use `cargo build -j4` to specify job count
+4. **Clean state**: Delete `data/` directory between runs for fresh state
 
 ## Security Considerations
 
