@@ -107,7 +107,6 @@ runtime-benchmarks = [
     "xcm-builder/runtime-benchmarks",
     "xcm-executor/runtime-benchmarks",
     "cumulus-pallet-parachain-system/runtime-benchmarks",
-    "cumulus-pallet-xcm/runtime-benchmarks",
 ]
 
 try-runtime = [
