@@ -219,7 +219,7 @@ pub mod pallet {
         ) -> DispatchResult {
             let provider = ensure_signed(origin)?;
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
             // Validate pricing
             ensure!(Self::is_valid_pricing(&pricing), Error::<T>::InvalidPricing);
@@ -291,7 +291,7 @@ pub mod pallet {
 
                 ensure!(listing.provider == who, Error::<T>::NotAuthorized);
 
-                let now = T::TimeProvider::now().as_secs();
+                let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
                 if let Some(new_title) = title {
                     listing.title = new_title;
@@ -333,7 +333,7 @@ pub mod pallet {
                 ensure!(listing.provider == who, Error::<T>::NotAuthorized);
 
                 listing.status = status.clone();
-                listing.updated_at = T::TimeProvider::now().as_secs();
+                listing.updated_at = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
                 Self::deposit_event(Event::ListingStatusChanged { listing_id, status });
 
@@ -357,7 +357,7 @@ pub mod pallet {
                 let listing = maybe_listing.as_mut().ok_or(Error::<T>::ListingNotFound)?;
 
                 listing.quality_score = score;
-                listing.updated_at = T::TimeProvider::now().as_secs();
+                listing.updated_at = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
                 Self::deposit_event(Event::ListingUpdated { listing_id });
 

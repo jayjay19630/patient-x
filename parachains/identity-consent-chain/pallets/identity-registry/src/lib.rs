@@ -192,7 +192,7 @@ pub mod pallet {
             // Validate name
             ensure!(!name.is_empty(), Error::<T>::InvalidName);
 
-            let now = T::TimeProvider::now().as_secs();
+            let now: u64 = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
             let identity = Identity {
                 did: did.clone(),
@@ -243,7 +243,7 @@ pub mod pallet {
                     identity.email_hash = new_email_hash;
                 }
 
-                identity.updated_at = T::TimeProvider::now().as_secs();
+                identity.updated_at = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
                 Self::deposit_event(Event::IdentityUpdated { account: who.clone() });
 
@@ -264,7 +264,7 @@ pub mod pallet {
                 Error::<T>::VerificationAlreadyPending
             );
 
-            let now = T::TimeProvider::now().as_secs();
+            let now: u64 = T::TimeProvider::now().try_into().ok().unwrap_or(0);
             VerificationQueue::<T>::insert(&who, now);
 
             Identities::<T>::try_mutate(&who, |maybe_identity| -> DispatchResult {
@@ -298,7 +298,7 @@ pub mod pallet {
             Identities::<T>::try_mutate(&target, |maybe_identity| -> DispatchResult {
                 let identity = maybe_identity.as_mut().ok_or(Error::<T>::IdentityNotFound)?;
                 identity.verification_status = VerificationStatus::Verified;
-                identity.updated_at = T::TimeProvider::now().as_secs();
+                identity.updated_at = T::TimeProvider::now().try_into().ok().unwrap_or(0);
                 Ok(())
             })?;
 
@@ -333,7 +333,7 @@ pub mod pallet {
             Identities::<T>::try_mutate(&target, |maybe_identity| -> DispatchResult {
                 let identity = maybe_identity.as_mut().ok_or(Error::<T>::IdentityNotFound)?;
                 identity.verification_status = VerificationStatus::Rejected;
-                identity.updated_at = T::TimeProvider::now().as_secs();
+                identity.updated_at = T::TimeProvider::now().try_into().ok().unwrap_or(0);
                 Ok(())
             })?;
 
@@ -356,7 +356,7 @@ pub mod pallet {
             Identities::<T>::try_mutate(&who, |maybe_identity| -> DispatchResult {
                 let identity = maybe_identity.as_mut().ok_or(Error::<T>::IdentityNotFound)?;
                 identity.active = false;
-                identity.updated_at = T::TimeProvider::now().as_secs();
+                identity.updated_at = T::TimeProvider::now().try_into().ok().unwrap_or(0);
                 Ok(())
             })?;
 

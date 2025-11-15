@@ -233,7 +233,7 @@ pub mod pallet {
             ensure!(!ipfs_hash.is_empty(), Error::<T>::InvalidIPFSHash);
             ensure!(!title.is_empty(), Error::<T>::InvalidTitle);
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
             // Generate unique record ID
             let count = RecordCount::<T>::get();
@@ -336,7 +336,7 @@ pub mod pallet {
 
                 ensure!(record.active, Error::<T>::RecordDeactivated);
 
-                let now = T::TimeProvider::now().as_secs();
+                let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
                 // Update access stats
                 record.access_count = record.access_count.saturating_add(1);

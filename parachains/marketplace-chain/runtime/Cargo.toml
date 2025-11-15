@@ -53,7 +53,7 @@ pallet-reputation = { workspace = true }
 pallet-analytics = { workspace = true }
 
 [build-dependencies]
-substrate-wasm-builder = { workspace = true, optional = true }
+substrate-wasm-builder = { workspace = true }
 
 [features]
 default = ["std"]
@@ -94,7 +94,6 @@ std = [
     "pallet-marketplace/std",
     "pallet-reputation/std",
     "pallet-analytics/std",
-    "substrate-wasm-builder",
 ]
 
 runtime-benchmarks = [

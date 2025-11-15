@@ -53,7 +53,7 @@ pallet-access-control = { workspace = true }
 pallet-encryption = { workspace = true }
 
 [build-dependencies]
-substrate-wasm-builder = { workspace = true, optional = true }
+substrate-wasm-builder = { workspace = true }
 
 [features]
 default = ["std"]
@@ -94,7 +94,6 @@ std = [
     "pallet-ipfs-integration/std",
     "pallet-access-control/std",
     "pallet-encryption/std",
-    "substrate-wasm-builder",
 ]
 
 runtime-benchmarks = [

@@ -186,7 +186,7 @@ pub mod pallet {
 
             ensure!(!ipfs_hash.is_empty(), Error::<T>::InvalidIPFSHash);
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
             // Check if content already exists
             if let Some(mut content) = IPFSContents::<T>::get(&ipfs_hash) {
@@ -249,7 +249,7 @@ pub mod pallet {
                     Error::<T>::AlreadyUnpinned
                 );
 
-                let now = T::TimeProvider::now().as_secs();
+                let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
                 content.status = ContentStatus::Unpinned;
                 content.unpinned_at = Some(now);
 
