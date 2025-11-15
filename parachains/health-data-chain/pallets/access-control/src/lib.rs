@@ -151,7 +151,7 @@ pub mod pallet {
         ) -> DispatchResult {
             let requester = ensure_signed(origin)?;
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
             // Generate request ID
             let count = RequestCount::<T>::get();
@@ -196,7 +196,7 @@ pub mod pallet {
                 // Only patient can grant access
                 ensure!(request.patient == who, Error::<T>::NotAuthorized);
 
-                let now = T::TimeProvider::now().as_secs();
+                let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
                 request.status = AccessStatus::Granted;
                 request.responded_at = Some(now);
 
@@ -224,7 +224,7 @@ pub mod pallet {
 
                 ensure!(request.patient == who, Error::<T>::NotAuthorized);
 
-                let now = T::TimeProvider::now().as_secs();
+                let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
                 request.status = AccessStatus::Denied;
                 request.responded_at = Some(now);
 

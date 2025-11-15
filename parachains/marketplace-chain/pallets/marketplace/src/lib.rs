@@ -242,7 +242,7 @@ pub mod pallet {
 
             ensure!(amount > 0, Error::<T>::InvalidAmount);
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
             // Calculate platform fee
             let platform_fee = Self::calculate_platform_fee(amount);
@@ -304,7 +304,7 @@ pub mod pallet {
                 ensure!(purchase.provider == who, Error::<T>::NotAuthorized);
                 ensure!(purchase.status == PurchaseStatus::Paid, Error::<T>::NotPaid);
 
-                let now = T::TimeProvider::now().as_secs();
+                let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
                 purchase.status = PurchaseStatus::Fulfilled;
                 purchase.fulfilled_at = Some(now);
 
@@ -377,7 +377,7 @@ pub mod pallet {
             ensure!(amount > 0, Error::<T>::InvalidAmount);
             ensure!(period_days > 0, Error::<T>::InvalidAmount);
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
             // Generate subscription ID
             let count = SubscriptionCount::<T>::get();

@@ -107,12 +107,17 @@ Patient X is a decentralized medical data marketplace built on three interconnec
 ```
 parachains/
 ├── README.md                          # This file
-├── docker-compose.yml                 # Local testnet setup
 ├── scripts/
+│   ├── run-all.sh                    # Unified script (setup, build, test, launch)
 │   ├── setup.sh                      # Environment setup
 │   ├── build-all.sh                  # Build all parachains
-│   ├── launch-testnet.sh             # Launch local testnet
-│   └── register-parachains.sh        # Register parachains
+│   └── launch-testnet.sh             # Launch local testnet
+├── data/                              # Chain data (created by setup.sh)
+│   ├── relay/
+│   ├── identity-consent/
+│   ├── health-data/
+│   └── marketplace/
+├── logs/                              # Runtime logs
 ├── identity-consent-chain/
 │   ├── Cargo.toml
 │   ├── node/                         # Node implementation
@@ -154,28 +159,89 @@ rustup target add wasm32-unknown-unknown
 
 # Install Polkadot SDK dependencies
 # On macOS
-brew install cmake pkg-config openssl git llvm
+brew install cmake pkg-config openssl git llvm protobuf
 
 # On Ubuntu/Debian
 sudo apt install -y cmake pkg-config libssl-dev git clang libclang-dev protobuf-compiler
 ```
 
-### Build All Chains
+### Quick Start (All-in-One)
+
+The easiest way to get started is using the unified `run-all.sh` script:
 
 ```bash
 cd parachains
 chmod +x scripts/*.sh
+
+# Run everything: setup, build, test, and launch
+./scripts/run-all.sh
+
+# Or skip certain phases
+./scripts/run-all.sh --skip-setup --skip-test
+
+# Just check for type errors
+./scripts/run-all.sh --check-only
+
+# Build without tests
+./scripts/run-all.sh --skip-test --skip-launch
+
+# Clean build
+./scripts/run-all.sh --clean
+```
+
+**Available Options:**
+- `--skip-setup` - Skip environment setup (Rust, dependencies, tools)
+- `--skip-build` - Skip building the chains
+- `--skip-test` - Skip running tests
+- `--skip-launch` - Skip launching the testnet
+- `--check-only` - Only run type checking (cargo check)
+- `--clean` - Remove target directories before building
+- `-h, --help` - Show help message
+
+### Manual Setup
+
+If you prefer to run each step manually:
+
+#### 1. Environment Setup
+
+```bash
+cd parachains
+./scripts/setup.sh
+```
+
+This installs:
+- Rust toolchain and WebAssembly target
+- System dependencies (cmake, pkg-config, openssl, etc.)
+- Polkadot binary (for local relay chain)
+- Zombienet (for testnet orchestration)
+- Creates necessary directories
+
+#### 2. Build All Chains
+
+```bash
 ./scripts/build-all.sh
 ```
 
-### Launch Local Testnet
+#### 3. Run Tests
 
 ```bash
-# Start local relay chain and all three parachains
+# Test individual chain
+cd identity-consent-chain
+cargo test --workspace
+
+# Or test all via run-all.sh
+./scripts/run-all.sh --skip-setup --skip-build --skip-launch
+```
+
+#### 4. Launch Local Testnet
+
+```bash
 ./scripts/launch-testnet.sh
 ```
 
 ### Access Endpoints
+
+Once the testnet is running:
 
 - **Relay Chain**: ws://localhost:9944
 - **IdentityConsent Chain**: ws://localhost:9988
@@ -183,6 +249,17 @@ chmod +x scripts/*.sh
 - **Marketplace Chain**: ws://localhost:9990
 
 ## Development
+
+### Type Checking
+
+```bash
+# Check all chains for type errors
+./scripts/run-all.sh --check-only --skip-setup
+
+# Check individual chain
+cd identity-consent-chain
+cargo check --workspace
+```
 
 ### Building Individual Chains
 
@@ -204,23 +281,16 @@ cargo build --release
 
 ```bash
 # Test all chains
-./scripts/test-all.sh
+for chain in identity-consent-chain health-data-chain marketplace-chain; do
+  cd $chain
+  cargo test --workspace
+  cd ..
+done
 
-# Test individual chain
-cd identity-consent-chain
+# Test specific pallet
+cd identity-consent-chain/pallets/identity-registry
 cargo test
 ```
-
-## Deployment
-
-### Testnet Deployment (Rococo)
-
-1. Build parachain artifacts
-2. Generate chain spec
-3. Register parachain on Rococo
-4. Start collators
-
-See [docs/deployment.md](./docs/deployment.md) for detailed instructions.
 
 ## Security Considerations
 
@@ -236,19 +306,11 @@ See [docs/deployment.md](./docs/deployment.md) for detailed instructions.
 - **GDPR**: Right to erasure (pointer removal), consent management
 - **HITECH**: Breach notification through on-chain events
 
-## Future Enhancements
+## Scripts
 
-1. Zero-knowledge proofs for privacy-preserving analytics
-2. Integration with Polkadot's identity pallet
-3. Machine learning model marketplace
-4. Cross-chain bridges to Ethereum/Cosmos
-5. Mobile SDK for patient apps
-6. Federated learning support
+The `scripts/` directory contains:
 
-## License
-
-Apache 2.0
-
-## Support
-
-For issues and questions, please open a GitHub issue or contact the development team.
+- **[run-all.sh](scripts/run-all.sh)** - Unified script to run everything (setup, build, test, launch)
+- **[setup.sh](scripts/setup.sh)** - Install development environment and dependencies
+- **[build-all.sh](scripts/build-all.sh)** - Build all three parachains
+- **[launch-testnet.sh](scripts/launch-testnet.sh)** - Launch local testnet with zombienet

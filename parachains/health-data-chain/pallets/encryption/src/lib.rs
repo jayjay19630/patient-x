@@ -207,7 +207,7 @@ pub mod pallet {
         ) -> DispatchResult {
             let owner = ensure_signed(origin)?;
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
             // Check if account has reached max keys
             let mut account_keys = AccountKeys::<T>::get(&owner);
@@ -271,7 +271,7 @@ pub mod pallet {
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
             // Get old key for record
             let old_key_id = RecordKeys::<T>::get(&record_id).ok_or(Error::<T>::NoKeyForRecord)?;
@@ -364,7 +364,7 @@ pub mod pallet {
             let key = EncryptionKeys::<T>::get(key_id).ok_or(Error::<T>::KeyNotFound)?;
             ensure!(key.owner == who, Error::<T>::NotAuthorized);
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
             let access = KeyAccess {
                 grantee: grantee.clone(),

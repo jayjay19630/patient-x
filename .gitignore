@@ -8,3 +8,5 @@ target/
 # Cargo lock file (workspace generates its own)
 # Cargo.lock is committed at workspace root for reproducible builds
 /parachains/identity-consent-chain/Cargo.lock
+/parachains/health-data-chain/Cargo.lock
+/parachains/marketplace-chain/Cargo.lock

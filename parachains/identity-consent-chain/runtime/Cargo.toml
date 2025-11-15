@@ -52,7 +52,7 @@ pallet-consent-manager = { workspace = true }
 pallet-authentication = { workspace = true }
 
 [build-dependencies]
-substrate-wasm-builder = { workspace = true, optional = true }
+substrate-wasm-builder = { workspace = true }
 
 [features]
 default = ["std"]
@@ -92,7 +92,6 @@ std = [
     "pallet-identity-registry/std",
     "pallet-consent-manager/std",
     "pallet-authentication/std",
-    "substrate-wasm-builder",
 ]
 
 runtime-benchmarks = [

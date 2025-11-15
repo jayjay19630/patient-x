@@ -285,7 +285,7 @@ pub mod pallet {
             // Validate data types
             ensure!(!data_types.is_empty(), Error::<T>::InvalidDataTypes);
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
             // Validate expiry
             if expires_at > 0 {
@@ -354,7 +354,7 @@ pub mod pallet {
                     Error::<T>::AlreadyRevoked
                 );
 
-                let now = T::TimeProvider::now().as_secs();
+                let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
                 consent.status = ConsentStatus::Revoked;
                 consent.revoked_at = Some(now);
 
@@ -387,7 +387,7 @@ pub mod pallet {
                     Error::<T>::ConsentExpired
                 );
 
-                let now = T::TimeProvider::now().as_secs();
+                let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
                 if let Some(expires_at) = new_expires_at {
                     if expires_at > 0 {
@@ -421,7 +421,7 @@ pub mod pallet {
                 let consent = maybe_consent.as_mut().ok_or(Error::<T>::ConsentNotFound)?;
 
                 // Check consent is active and valid
-                let now = T::TimeProvider::now().as_secs();
+                let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
                 if !matches!(consent.status, ConsentStatus::Active) {
                     Self::deposit_event(Event::AccessDenied {
@@ -481,7 +481,7 @@ pub mod pallet {
             }
 
             // Check expiry
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
             if consent.expires_at > 0 && consent.expires_at < now {
                 return Err(Error::<T>::ConsentExpired.into());
             }

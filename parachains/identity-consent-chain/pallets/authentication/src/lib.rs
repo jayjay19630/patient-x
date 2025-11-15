@@ -102,7 +102,7 @@ pub mod pallet {
                 Error::<T>::InvalidIdentity
             );
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
             let session_id = Self::generate_session_id(&who, now);
 
             let session = Session {
@@ -156,7 +156,7 @@ pub mod pallet {
                 Error::<T>::InvalidIdentity
             );
 
-            let now = T::TimeProvider::now().as_secs();
+            let now = T::TimeProvider::now().try_into().ok().unwrap_or(0);
 
             let api_key = ApiKey {
                 account: who.clone(),
